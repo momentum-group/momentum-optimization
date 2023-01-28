@@ -43,9 +43,9 @@ for person in range(num_people):
     prob += sum(x[person])/2 <= max_hours[person]
     prob += sum(x[person])/2 >= min_hours[person]
 
-# Each period must have the correct number of people working
-for period in range(num_periods):
-    prob += sum([x[person][period] for person in range(num_people)]) >= schedule[period]
+    # Each period must have the correct number of people working
+    for period in range(num_periods):
+        prob += sum([x[person][period] for person in range(num_people)]) >= needed_capacity[period]
 
 # Each person can only work when they are available
 for person in range(num_people):
