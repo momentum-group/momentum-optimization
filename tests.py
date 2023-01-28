@@ -15,6 +15,9 @@ def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: 
 
     x = [[LpVariable(f"x_{i}_{j}", lowBound=0, upBound=1, cat='Binary') for j in range(num_periods)] for i in people]
 
+    num_people = len(people)
+    num_periods = len(people[0])
+
     # Objective function
     # Minimize the maximum deviation from the preferred number of hours
     diffs = []
@@ -35,7 +38,7 @@ def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: 
 
     # Each period must have the correct number of people working
     for period in range(num_periods):
-        prob += sum([x[person][period] for person in range(num_people)]) >= schedule[period]
+        prob += sum([x[person][period] for person in range(num_people)]) >= needed_capacity[period]
 
     # Each person can only work when they are available
     for person in range(num_people):
