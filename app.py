@@ -4,6 +4,11 @@ from pulp import *
 
 app = Flask(__name__)
 
+@app.route('/', methods=['POST', 'GET'])
+def hello_world():
+    return 'Hello, World!'
+
+
 @app.route('/schedule', methods=['POST'])
 def schedule():
     data = request.get_json()

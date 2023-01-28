@@ -1,5 +1,4 @@
 from pulp import *
-import numpy as np
 
 def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: list, needed_capacity: list):
     """
