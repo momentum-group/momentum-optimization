@@ -67,3 +67,4 @@ for person in range(num_people):
 # Print objective function value
 print("Objective function value:", value(prob.objective))
 
+    return x
