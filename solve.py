@@ -1,4 +1,5 @@
 from pulp import *
+import numpy as np
 
 def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: list, needed_capacity: list):
     """
@@ -14,7 +15,7 @@ def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: 
 
     prob = LpProblem("Work_Schedule_Optimization", LpMinimize)
 
-    x = [[LpVariable(f"x_{i}_{j}", lowBound=0, upBound=1, cat='Binary') for j in range(num_periods)] for i in people]
+    x = [[LpVariable(f"x_{i}_{j}", lowBound=0, upBound=1, cat='Binary') for j in range(num_periods)] for i in range(num_people)]
 
     # Objective function
     # Minimize the maximum deviation from the preferred number of hours
@@ -25,8 +26,8 @@ def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: 
         diffs.append(abs_diff)
         prob += abs_diff >= diff
         prob += abs_diff >= -diff
-        prob += sum([x[i][j] for j in range(num_periods)])/2 - preferred_hours[i] == diff
-    prob += sum(diffs)
+        prob += lpSum([x[i][j] for j in range(num_periods)])/2 - preferred_hours[i] == diff
+    prob += lpSum(diffs)
 
     # Constraints
     # Each person much work between their minimum and maximum number of hours
@@ -36,16 +37,31 @@ def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: 
 
     # Each period must have the correct number of people working
     for period in range(num_periods):
-        prob += sum([x[person][period] for person in range(num_people)]) >= needed_capacity[period]
+        prob += lpSum([x[person][period] for person in range(num_people)]) >= needed_capacity[period]
 
     # Each person can only work when they are available
     for person in range(num_people):
         for period in range(num_periods):
             if people[person][period] == 0:
-                prob += x[person][period] == 0
+                prob += x[person][period] >= 0
+                prob += x[person][period] <= 0
 
+    # When a shift starts, it must continue for at least min_shift_length hours
     # Each person must work at least min_shift_length hours in a row
-    # TODO
+    min_shift_length = 2
+    is_beggining_of_shift = [[LpVariable(f"is_beggining_of_shift_{i}_{j}", lowBound=0, upBound=1, cat='Binary') for j in range(num_periods)] for i in range(num_people)]
+    for person in range(num_people):
+        prob += is_beggining_of_shift[person][0] >= x[person][0]
+        prob += is_beggining_of_shift[person][0] <= x[person][0]
+        for period in range(1, num_periods):
+            is_start = (x[person][period] - x[person][period-1]) >= 1
+            print(is_start)
+            prob += is_beggining_of_shift[person][period] >= is_start
+            prob += is_beggining_of_shift[person][period] <= is_start
+
+    for person in range(num_people):
+        for period in range(num_periods - min_shift_length):
+            prob += sum([x[person][period + i] for i in range(min_shift_length)]) >= min_shift_length * is_beggining_of_shift[person][period]
 
     # Solve
     prob.solve()
@@ -58,4 +74,4 @@ def scheduling(people: list, max_hours: list, min_hours: list, preferred_hours: 
     # Print objective function value
     print("Objective function value:", value(prob.objective))
 
-    return x
+    return prob, [[val.value() for val in row] for row in x]

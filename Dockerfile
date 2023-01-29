@@ -1,5 +1,5 @@
 FROM python:3.8-slim
-RUN pip install pulp flask
+RUN pip install pulp flask numpy
 COPY . app/
 WORKDIR /app
 EXPOSE 5000
