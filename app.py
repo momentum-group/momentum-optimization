@@ -6,21 +6,32 @@ app = Flask(__name__)
 
 @app.route('/', methods=['POST', 'GET'])
 def hello_world():
-    return 'Hello, World!'
+    return 'Just Updated'
+
+@app.route('/send_back', methods=['POST', 'GET'])
+def send_back():
+    data = request.get_json()
+    return jsonify(data)
 
 
 @app.route('/schedule', methods=['POST'])
 def schedule():
-    data = request.get_json()
+    data = json.loads(request.data)
+
     people = data['people']
     max_hours = data['max_hours']
     min_hours = data['min_hours']
     preferred_hours = data['preferred_hours']
     needed_capacity = data['needed_capacity']
     
-    x = scheduling(people, max_hours, min_hours, preferred_hours, needed_capacity)
+    try:
+        print(people, max_hours, min_hours, preferred_hours, needed_capacity)
+        prob, x = scheduling(people, max_hours, min_hours, preferred_hours, needed_capacity)
+    except Exception as e:
+        # return jsonify({'status': f'error: {e}'})
+        prob, x = scheduling(people, max_hours, min_hours, preferred_hours, needed_capacity)
 
-    return jsonify({'result': x})
+    return jsonify({'result': x, 'status': LpStatus[prob.status], 'objective': value(prob.objective)})
 
 
 if __name__ == '__main__':
